@@ -1,5 +1,6 @@
 package org.eci.ZwingBackend.project.application.service;
 
+import org.eci.ZwingBackend.auth.domain.model.User;
 import org.eci.ZwingBackend.project.application.port.in.HandleUserDeletionCase;
 import org.eci.ZwingBackend.project.application.port.in.ManagingCollaboratorCase;
 import org.eci.ZwingBackend.project.application.port.in.ManagingProjectsCase;
@@ -21,8 +22,13 @@ public class ProjectService implements ManagingProjectsCase, ManagingCollaborato
 
     @Override
     public Project createProject(String name, UUID ownerId) {
+        User owner = userLookupPort.getUserById(ownerId);
+        if (owner == null){
+            throw new RuntimeException("Owner user not found");
+        }
+
         Project project = new Project(name);
-        project.setProjectOwner(ownerId);
+        project.setProjectOwner(owner);
         project.setProjectId(UUID.randomUUID());
         projectRepository.save(project);
         return project;
@@ -31,7 +37,7 @@ public class ProjectService implements ManagingProjectsCase, ManagingCollaborato
     @Override
     public void deleteProject(UUID projectId, UUID requesterId) {
         Project project = projectRepository.getProjectById(projectId);
-        if (!project.getProjectOwner().equals(requesterId)) {
+        if (!project.getProjectOwner().getUserId().equals(requesterId)) {
             throw new RuntimeException("Unauthorized: Only the project owner can delete this project.");
         }
 
@@ -41,25 +47,22 @@ public class ProjectService implements ManagingProjectsCase, ManagingCollaborato
     @Override
     public void addCollaborator(UUID projectId, String email) {
         Project project = projectRepository.getProjectById(projectId);
-
-        UUID collaboratorId = userLookupPort.getUserIdByEmail(email);
-
-        if (collaboratorId == null) {
+        User collaborator = userLookupPort.getUserByEmail(email);
+        if (collaborator == null) {
             throw new RuntimeException("User with this email does not exist in the system.");
         }
 
-        project.addCollaborator(collaboratorId);
+        project.addCollaborator(collaborator);
         projectRepository.save(project);
     }
 
     @Override
     public void deleteCollaborator(UUID projectId, UUID collaboratorId, UUID requesterId) {
         Project project = projectRepository.getProjectById(projectId);
-        if (!project.getProjectOwner().equals(requesterId)) {
+        if (!project.getProjectOwner().getUserId().equals(requesterId)) {
             throw new RuntimeException("Unauthorized: Only the project owner can remove collaborators.");
         }
         project.removeCollaborator(collaboratorId);
-
         projectRepository.save(project);
     }
 
@@ -88,13 +91,11 @@ public class ProjectService implements ManagingProjectsCase, ManagingCollaborato
     public Project getProjectById(UUID projectId, UUID requesterId) {
         Project project = projectRepository.getProjectById(projectId);
 
-        boolean isOwner = project.getProjectOwner().equals(requesterId);
-        boolean isCollaborator = project.getCollaborators().contains(requesterId);
-
+        boolean isOwner = project.getProjectOwner().getUserId().equals(requesterId);
+        boolean isCollaborator = project.getCollaborators().stream().anyMatch(collab -> collab.getUserId().equals(requesterId));
         if (!isOwner && !isCollaborator) {
             throw new RuntimeException("Unauthorized: You are not a member of this project.");
         }
-
         return project;
     }
 }

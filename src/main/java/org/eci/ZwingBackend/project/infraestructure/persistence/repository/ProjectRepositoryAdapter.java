@@ -23,7 +23,6 @@ public class ProjectRepositoryAdapter implements ProjectRepositoryOutPort {
     public void save(Project project) {
         ProjectEntity entity = mapper.toEntity(project);
         postgreRepository.save(entity);
-        mapper.toDomain(entity);
     }
 
     @Override
@@ -39,7 +38,7 @@ public class ProjectRepositoryAdapter implements ProjectRepositoryOutPort {
 
     @Override
     public List<Project> getProjectsByCollaborator(UUID collaboratorId) {
-        List<ProjectEntity> entities = postgreRepository.findByCollaboratorsContaining(collaboratorId);
+        List<ProjectEntity> entities = postgreRepository.findByCollaborators_UserId(collaboratorId);
         return entities.stream()
                 .map(entity -> mapper.toDomain(entity))
                 .collect(Collectors.toList());
@@ -47,7 +46,7 @@ public class ProjectRepositoryAdapter implements ProjectRepositoryOutPort {
 
     @Override
     public List<Project> getProjectsByOwner(UUID ownerId) {
-        List<ProjectEntity> entities = postgreRepository.findByProjectOwner(ownerId);
+        List<ProjectEntity> entities = postgreRepository.findByProjectOwner_UserId(ownerId);
         return entities.stream()
                 .map(entity -> mapper.toDomain(entity))
                 .collect(Collectors.toList());
