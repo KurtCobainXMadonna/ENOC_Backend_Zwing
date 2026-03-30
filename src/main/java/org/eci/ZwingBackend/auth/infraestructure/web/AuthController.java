@@ -3,7 +3,7 @@ package org.eci.ZwingBackend.auth.infraestructure.web;
 import org.eci.ZwingBackend.auth.application.port.in.AuthenticateWithGoogleUseCase;
 import org.eci.ZwingBackend.auth.infraestructure.web.dto.request.GoogleAuthRequest;
 import org.eci.ZwingBackend.auth.infraestructure.web.dto.response.AuthResponse;
-import org.eci.ZwingBackend.auth.infraestructure.web.dto.response.GeneralResponse;
+import org.eci.ZwingBackend.shared.dto.GeneralResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;

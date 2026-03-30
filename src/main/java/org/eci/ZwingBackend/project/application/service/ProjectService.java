@@ -83,4 +83,18 @@ public class ProjectService implements ManagingProjectsCase, ManagingCollaborato
     public List<Project> getCollaboratingProjects(UUID collaboratorId) {
         return projectRepository.getProjectsByCollaborator(collaboratorId);
     }
+
+    @Override
+    public Project getProjectById(UUID projectId, UUID requesterId) {
+        Project project = projectRepository.getProjectById(projectId);
+
+        boolean isOwner = project.getProjectOwner().equals(requesterId);
+        boolean isCollaborator = project.getCollaborators().contains(requesterId);
+
+        if (!isOwner && !isCollaborator) {
+            throw new RuntimeException("Unauthorized: You are not a member of this project.");
+        }
+
+        return project;
+    }
 }

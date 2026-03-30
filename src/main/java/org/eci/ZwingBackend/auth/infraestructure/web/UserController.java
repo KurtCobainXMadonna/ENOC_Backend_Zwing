@@ -3,7 +3,7 @@ package org.eci.ZwingBackend.auth.infraestructure.web;
 import org.eci.ZwingBackend.auth.application.port.in.UserDeleteCase;
 import org.eci.ZwingBackend.auth.application.port.out.UserRepositoryAuthOutPort;
 import org.eci.ZwingBackend.auth.domain.model.User;
-import org.eci.ZwingBackend.auth.infraestructure.web.dto.response.GeneralResponse;
+import org.eci.ZwingBackend.shared.dto.GeneralResponse;
 import org.eci.ZwingBackend.auth.infraestructure.web.dto.response.UserResponse;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;

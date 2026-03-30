@@ -1,4 +1,4 @@
-package org.eci.ZwingBackend.project.infraestructure.web.dto.response;
+package org.eci.ZwingBackend.shared.dto;
 
 import lombok.Data;
 
