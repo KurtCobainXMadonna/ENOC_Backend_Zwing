@@ -88,6 +88,7 @@ public class ProjectService implements ManagingProjectsCase, ManagingCollaborato
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Project getProjectById(UUID projectId, UUID requesterId) {
         Project project = projectRepository.getProjectById(projectId);
 
