@@ -8,6 +8,8 @@ import org.eci.ZwingBackend.project.application.port.out.ProjectRepositoryOutPor
 import org.eci.ZwingBackend.project.application.port.out.UserLookupPort;
 import org.eci.ZwingBackend.project.domain.model.Project;
 import lombok.AllArgsConstructor;
+import org.eci.ZwingBackend.rack.application.port.in.ManageRackCase;
+import org.eci.ZwingBackend.rack.domain.model.ChannelRack;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +21,7 @@ import java.util.UUID;
 public class ProjectService implements ManagingProjectsCase, ManagingCollaboratorCase, HandleUserDeletionCase {
     private ProjectRepositoryOutPort projectRepository;
     private final UserLookupPort userLookupPort;
+    private ManageRackCase manageRackCase;
 
     @Override
     public Project createProject(String name, UUID ownerId) {
@@ -30,6 +33,8 @@ public class ProjectService implements ManagingProjectsCase, ManagingCollaborato
         Project project = new Project(name);
         project.setProjectOwner(owner);
         project.setProjectId(UUID.randomUUID());
+        ChannelRack rack = manageRackCase.createRackForProject(project.getProjectId());
+        project.setChannelRackId(rack.getRackId());
         projectRepository.save(project);
         return project;
     }

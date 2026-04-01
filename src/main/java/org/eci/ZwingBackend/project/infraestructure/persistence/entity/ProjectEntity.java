@@ -27,4 +27,7 @@ public class ProjectEntity {
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
     private Set<UserEntity> collaborators = new HashSet<>();
+
+    @Column
+    private UUID channelRackId;
 }

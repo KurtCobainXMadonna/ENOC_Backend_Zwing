@@ -13,6 +13,7 @@ public class Project {
     private String projectName;
     private Set<User> collaborators = new HashSet<>();
     private User projectOwner;
+    private UUID channelRackId;
 
     public Project(String projectName) {
         this.projectName = projectName;
