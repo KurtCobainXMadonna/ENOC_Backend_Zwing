@@ -44,11 +44,14 @@ ALTER TABLE projects ADD CONSTRAINT fk_project_rack FOREIGN KEY (channel_rack_id
 --    Replace blob_url values with your actual Azure Blob Storage URLs.
 -- =============================================================================
 INSERT INTO sound_presets (sound_id, name, category, blob_url, description) VALUES
-                                                                                ('a1000000-0000-0000-0000-000000000001', 'Kick Classic',  'KICK',  'https://YOUR_STORAGE.blob.core.windows.net/sounds/kick-classic.wav',  'Punchy classic kick'),
-                                                                                ('a1000000-0000-0000-0000-000000000002', 'Kick Deep',     'KICK',  'https://YOUR_STORAGE.blob.core.windows.net/sounds/kick-deep.wav',     'Deep sub kick'),
-                                                                                ('a2000000-0000-0000-0000-000000000001', 'Snare Crack',   'SNARE', 'https://YOUR_STORAGE.blob.core.windows.net/sounds/snare-crack.wav',   'Sharp crack snare'),
-                                                                                ('a2000000-0000-0000-0000-000000000002', 'Snare Fat',     'SNARE', 'https://YOUR_STORAGE.blob.core.windows.net/sounds/snare-fat.wav',     'Fat layered snare'),
-                                                                                ('a3000000-0000-0000-0000-000000000001', 'Hi-Hat Closed', 'HIHAT', 'https://YOUR_STORAGE.blob.core.windows.net/sounds/hihat-closed.wav',  'Tight closed hi-hat'),
-                                                                                ('a3000000-0000-0000-0000-000000000002', 'Hi-Hat Open',   'HIHAT', 'https://YOUR_STORAGE.blob.core.windows.net/sounds/hihat-open.wav',    'Washy open hi-hat'),
-                                                                                ('a4000000-0000-0000-0000-000000000001', 'Clap Standard', 'CLAP',  'https://YOUR_STORAGE.blob.core.windows.net/sounds/clap-standard.wav', 'Classic 808 clap'),
-                                                                                ('a4000000-0000-0000-0000-000000000002', 'Clap Reverb',   'CLAP',  'https://YOUR_STORAGE.blob.core.windows.net/sounds/clap-reverb.wav',   'Room reverb clap');
+    ('a1000000-0000-0000-0000-000000000001', 'Hardstyle Power Kick',     'KICK',  'https://zwingaudiostorage.blob.core.windows.net/audio-presets/hardstyle-power-kick-gold.wav',                                      'Hard-hitting power kick'),
+    ('a1000000-0000-0000-0000-000000000002', 'Bass Line Kick',           'KICK',  'https://zwingaudiostorage.blob.core.windows.net/audio-presets/baby-keem-type-bass-line_120bpm_D.wav',                                 'Deep bass line at 120 BPM in D'),
+    ('a2000000-0000-0000-0000-000000000001', 'Hardstyle Power Snare',    'SNARE', 'https://zwingaudiostorage.blob.core.windows.net/audio-presets/hardstyle-power-snare-oxy.wav',                                         'Punchy hardstyle snare'),
+    ('a2000000-0000-0000-0000-000000000002', 'Guitar Chords Loop',       'SNARE', 'https://zwingaudiostorage.blob.core.windows.net/audio-presets/happy-positive-guitar-chords-acoustic-loop_115bpm_G_major.wav',          'Acoustic guitar loop 115 BPM G major'),
+    ('a5000000-0000-0000-0000-000000000001', 'Sad Piano Loop',           'SAMPLE','https://zwingaudiostorage.blob.core.windows.net/audio-presets/the-night-train-sad-wet-bassy-grand-piano_110bpm_F_minor.wav',            'Grand piano 110 BPM F minor');
+
+--
+-- INSERT INTO sound_presets (sound_id, name, category, blob_url, description) VALUES
+--     ('a3000000-0000-0000-0000-000000000001', 'Hi-Hat Closed', 'HIHAT', 'https://zwingaudiostorage.blob.core.windows.net/audio-presets/YOUR_HIHAT_CLOSED.wav', 'Tight closed hi-hat'),
+--     ('a3000000-0000-0000-0000-000000000002', 'Hi-Hat Open',   'HIHAT', 'https://zwingaudiostorage.blob.core.windows.net/audio-presets/YOUR_HIHAT_OPEN.wav',   'Open hi-hat'),
+--     ('a4000000-0000-0000-0000-000000000001', 'Clap Standard', 'CLAP',  'https://zwingaudiostorage.blob.core.windows.net/audio-presets/YOUR_CLAP.wav',         'Standard clap');
