@@ -1,12 +1,14 @@
 package org.eci.ZwingBackend.rack.domain.model;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Data
+@NoArgsConstructor
 public class ChannelRack {
     private UUID rackId;
     private UUID projectId;

@@ -6,17 +6,17 @@ import org.eci.ZwingBackend.sound.application.port.in.BrowseSoundsCase;
 import org.eci.ZwingBackend.sound.domain.model.SoundCategory;
 import org.eci.ZwingBackend.sound.infrastructure.web.dto.SoundPresetResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@Controller
+@RestController
 @RequestMapping("/api/sounds")
 @AllArgsConstructor
 public class SoundPresetController {
@@ -39,5 +39,4 @@ public class SoundPresetController {
         SoundPresetResponse sound = SoundPresetResponse.from(browseSoundsCase.getSoundById(soundId));
         return ResponseEntity.ok(GeneralResponse.success(sound, "Sound retrieved successfully"));
     }
-
 }

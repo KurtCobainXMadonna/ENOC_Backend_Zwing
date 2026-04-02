@@ -13,31 +13,36 @@ import java.util.stream.Collectors;
 public class ProjectMapper {
     private final UserAuthMapper userAuthMapper;
 
-    public ProjectEntity toEntity(Project project){
-        ProjectEntity newProjectEn = new ProjectEntity();
-        newProjectEn.setProjectName(project.getProjectName());
-        newProjectEn.setProjectId(project.getProjectId());
-        if (project.getProjectOwner() != null){
-            newProjectEn.setProjectOwner(userAuthMapper.toEntity(project.getProjectOwner()));
+    public ProjectEntity toEntity(Project project) {
+        ProjectEntity entity = new ProjectEntity();
+        entity.setProjectName(project.getProjectName());
+        entity.setProjectId(project.getProjectId());
+        entity.setChannelRackId(project.getChannelRackId());
+
+        if (project.getProjectOwner() != null) {
+            entity.setProjectOwner(userAuthMapper.toEntity(project.getProjectOwner()));
         }
         if (project.getCollaborators() != null) {
-            newProjectEn.setCollaborators(project.getCollaborators().stream().map(userAuthMapper::toEntity).collect(Collectors.toSet()));
+            entity.setCollaborators(project.getCollaborators().stream()
+                    .map(userAuthMapper::toEntity)
+                    .collect(Collectors.toSet()));
         }
-
-
-        return newProjectEn;
+        return entity;
     }
 
     public Project toDomain(ProjectEntity entity) {
-        Project newProject = new Project(entity.getProjectName());
-        newProject.setProjectId(entity.getProjectId());
+        Project project = new Project(entity.getProjectName());
+        project.setProjectId(entity.getProjectId());
+        project.setChannelRackId(entity.getChannelRackId());
+
         if (entity.getProjectOwner() != null) {
-            newProject.setProjectOwner(userAuthMapper.toDomain(entity.getProjectOwner()));
+            project.setProjectOwner(userAuthMapper.toDomain(entity.getProjectOwner()));
         }
         if (entity.getCollaborators() != null) {
-            newProject.setCollaborators(entity.getCollaborators().stream().map(userAuthMapper::toDomain).collect(Collectors.toSet()));
+            project.setCollaborators(entity.getCollaborators().stream()
+                    .map(userAuthMapper::toDomain)
+                    .collect(Collectors.toSet()));
         }
-
-        return newProject;
+        return project;
     }
 }

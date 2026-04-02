@@ -19,22 +19,10 @@ import org.springframework.stereotype.Controller;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * All rack real-time operations flow through here.
- *
- * Client sends to:   /app/rack/{projectId}/{operation}
- * Server broadcasts: /topic/rack/{projectId}          ← entire project room sees it
- * Server errors to:  /user/queue/errors               ← only the requester sees it
- *
- * Every handler:
- *   1. Extracts userId/email from session (set by JwtHandshakeInterceptor at handshake)
- *   2. Delegates to use case (which enforces business rules + locks)
- *   3. Broadcasts RackEvent to the project topic
- *   4. On error: sends only to /user/queue/errors — never broadcast
- */
 @Controller
 @AllArgsConstructor
 public class RackWebSocketController {
+
     private final SimpMessagingTemplate messaging;
     private final ManageRackCase manageRackCase;
     private final ManageChannelCase manageChannelCase;
@@ -45,10 +33,6 @@ public class RackWebSocketController {
 
     // ── INITIAL LOAD ──────────────────────────────────────────────────────────
 
-    /**
-     * Client sends to /app/rack/{projectId}/load when entering the project room.
-     * Returns the full rack state only to the requesting user (not a broadcast).
-     */
     @MessageMapping("/rack/{projectId}/load")
     public void loadRack(@DestinationVariable String projectId,
                          SimpMessageHeaderAccessor headers) {
@@ -64,7 +48,6 @@ public class RackWebSocketController {
 
     // ── CHANNEL ADD / REMOVE ──────────────────────────────────────────────────
 
-    /** Client sends to /app/rack/{projectId}/channel/add  — payload: { name, soundId } */
     @MessageMapping("/rack/{projectId}/channel/add")
     public void addChannel(@DestinationVariable String projectId,
                            @Payload Map<String, String> payload,
@@ -75,15 +58,13 @@ public class RackWebSocketController {
                     UUID.fromString(projectId),
                     payload.get("name"),
                     UUID.fromString(payload.get("soundId")),
-                    UUID.fromString(userId)
-            );
+                    UUID.fromString(userId));
             broadcast(projectId, new RackEvent("CHANNEL_ADDED", channel, userId));
         } catch (Exception e) {
             sendError(userId, e.getMessage());
         }
     }
 
-    /** Client sends to /app/rack/{projectId}/channel/{channelId}/remove */
     @MessageMapping("/rack/{projectId}/channel/{channelId}/remove")
     public void removeChannel(@DestinationVariable String projectId,
                               @DestinationVariable String channelId,
@@ -101,11 +82,6 @@ public class RackWebSocketController {
 
     // ── GRID TOGGLE ───────────────────────────────────────────────────────────
 
-    /**
-     * Client sends to /app/rack/{projectId}/channel/{channelId}/step
-     * Payload: { "stepIndex": 3 }
-     * Most frequent operation — fires on every cell click.
-     */
     @MessageMapping("/rack/{projectId}/channel/{channelId}/step")
     public void toggleStep(@DestinationVariable String projectId,
                            @DestinationVariable String channelId,
@@ -126,7 +102,6 @@ public class RackWebSocketController {
 
     // ── CHANNEL LOCK ──────────────────────────────────────────────────────────
 
-    /** Client sends to /app/rack/{projectId}/channel/{channelId}/lock */
     @MessageMapping("/rack/{projectId}/channel/{channelId}/lock")
     public void lockChannel(@DestinationVariable String projectId,
                             @DestinationVariable String channelId,
@@ -150,7 +125,6 @@ public class RackWebSocketController {
         }
     }
 
-    /** Client sends to /app/rack/{projectId}/channel/{channelId}/unlock */
     @MessageMapping("/rack/{projectId}/channel/{channelId}/unlock")
     public void unlockChannel(@DestinationVariable String projectId,
                               @DestinationVariable String channelId,
@@ -166,10 +140,6 @@ public class RackWebSocketController {
         }
     }
 
-    /**
-     * Client sends to /app/rack/{projectId}/channel/{channelId}/update
-     * Payload: { name, soundId, volume, active } — must hold the channel lock.
-     */
     @MessageMapping("/rack/{projectId}/channel/{channelId}/update")
     public void updateChannel(@DestinationVariable String projectId,
                               @DestinationVariable String channelId,
@@ -185,8 +155,7 @@ public class RackWebSocketController {
                     soundIdStr != null ? UUID.fromString(soundIdStr) : null,
                     payload.get("volume") != null ? ((Number) payload.get("volume")).floatValue() : 1.0f,
                     payload.get("active") == null || (Boolean) payload.get("active"),
-                    UUID.fromString(userId)
-            );
+                    UUID.fromString(userId));
             broadcast(projectId, new RackEvent("CHANNEL_UPDATED", updated, userId));
         } catch (Exception e) {
             sendError(userId, e.getMessage());
@@ -195,12 +164,15 @@ public class RackWebSocketController {
 
     // ── PLAYBACK LOCK ─────────────────────────────────────────────────────────
 
-    /** Client sends to /app/rack/{projectId}/playback/start — freezes the entire rack. */
     @MessageMapping("/rack/{projectId}/playback/start")
     public void startPlayback(@DestinationVariable String projectId,
                               SimpMessageHeaderAccessor headers) {
         String userId = getUserId(headers);
         try {
+            if (channelLockCase.isPlaybackLocked(UUID.fromString(projectId))) {
+                sendError(userId, "Playback is already active.");
+                return;
+            }
             channelLockCase.acquirePlaybackLock(UUID.fromString(projectId), UUID.fromString(userId));
             broadcast(projectId, new RackEvent("PLAYBACK_STARTED",
                     Map.of("startedBy", userId), userId));
@@ -209,12 +181,15 @@ public class RackWebSocketController {
         }
     }
 
-    /** Client sends to /app/rack/{projectId}/playback/stop — editing resumes for all. */
     @MessageMapping("/rack/{projectId}/playback/stop")
     public void stopPlayback(@DestinationVariable String projectId,
                              SimpMessageHeaderAccessor headers) {
         String userId = getUserId(headers);
         try {
+            if (!channelLockCase.isPlaybackLocked(UUID.fromString(projectId))) {
+                sendError(userId, "Playback is not active.");
+                return;
+            }
             channelLockCase.releasePlaybackLock(UUID.fromString(projectId));
             broadcast(projectId, new RackEvent("PLAYBACK_STOPPED",
                     Map.of("stoppedBy", userId), userId));

@@ -13,17 +13,23 @@ import java.util.UUID;
  * 1. CHANNEL LOCK — per-channel, 30s TTL (auto-expires on crash/disconnect)
  *    Key: channel_lock:{projectId}:{channelId}  →  userId
  *
- * 2. PLAYBACK LOCK — project-wide, no TTL (explicit release only)
+ * 2. PLAYBACK LOCK — project-wide, 5-minute safety TTL
  *    Key: playback_lock:{projectId}  →  userId
+ *    Uses SET NX so two concurrent play requests can't both succeed.
+ *    The 5-minute TTL is a safety net — normal cleanup happens via
+ *    the disconnect handler or explicit stop.
  *
- * Redis SET NX (acquireLock) guarantees atomicity — two concurrent requests
+ * Redis SET NX guarantees atomicity — two concurrent requests
  * cannot both think they acquired the same lock.
  */
 @Service
 @AllArgsConstructor
 public class ChannelLockService implements ChannelLockCase {
+
     private final ChannelLockPort lockPort;
+
     private static final long CHANNEL_LOCK_TTL_SECONDS = 30;
+    private static final long PLAYBACK_LOCK_TTL_SECONDS = 300; // 5-minute safety net
 
     private String channelLockKey(UUID projectId, UUID channelId) {
         return "channel_lock:" + projectId + ":" + channelId;
@@ -35,7 +41,8 @@ public class ChannelLockService implements ChannelLockCase {
 
     @Override
     public boolean acquireChannelLock(UUID projectId, UUID channelId, UUID userId) {
-        return lockPort.acquireLock(channelLockKey(projectId, channelId), userId.toString(), CHANNEL_LOCK_TTL_SECONDS);
+        return lockPort.acquireLock(
+                channelLockKey(projectId, channelId), userId.toString(), CHANNEL_LOCK_TTL_SECONDS);
     }
 
     @Override
@@ -50,7 +57,11 @@ public class ChannelLockService implements ChannelLockCase {
 
     @Override
     public void acquirePlaybackLock(UUID projectId, UUID userId) {
-        lockPort.setLock(playbackLockKey(projectId), userId.toString());
+        boolean acquired = lockPort.acquireLock(
+                playbackLockKey(projectId), userId.toString(), PLAYBACK_LOCK_TTL_SECONDS);
+        if (!acquired) {
+            throw new RuntimeException("Playback is already active.");
+        }
     }
 
     @Override
