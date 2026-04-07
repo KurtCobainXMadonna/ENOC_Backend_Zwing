@@ -64,6 +64,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String userId = String.valueOf(claims.get("userId"));
             String email = claims.getSubject();
 
+            if (blacklistService.isTokenBlacklisted(token)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
             if (blacklistService.isUserBlacklisted(userId)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;

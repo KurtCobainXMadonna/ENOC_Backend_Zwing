@@ -1,10 +1,11 @@
 package org.eci.ZwingBackend.project.infraestructure.web;
 
-import org.eci.ZwingBackend.project.infraestructure.web.dto.response.GeneralResponse;
 import org.eci.ZwingBackend.project.application.port.in.ManagingCollaboratorCase;
 import org.eci.ZwingBackend.project.application.port.in.ManagingProjectsCase;
 import org.eci.ZwingBackend.project.domain.model.Project;
 import lombok.AllArgsConstructor;
+import org.eci.ZwingBackend.project.infraestructure.web.dto.request.CreateProjectRequest;
+import org.eci.ZwingBackend.shared.dto.GeneralResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,10 +33,16 @@ public class ProjectController {
         return ResponseEntity.ok(GeneralResponse.success(responseData, "Projects retrieved successfully"));
     }
 
+    @GetMapping("/{projectId}")
+    public ResponseEntity<GeneralResponse<Project>> getProjectById(@PathVariable UUID projectId, @RequestHeader("X-User-Id") UUID requesterId) {
+        Project project = serviceMangeProject.getProjectById(projectId, requesterId);
+        return ResponseEntity.ok(GeneralResponse.success(project, "Project retrieved successfully"));
+    }
+
 
     @PostMapping
-    public ResponseEntity<GeneralResponse<Project>> createProject (@RequestBody String name, @RequestHeader("X-User-Id") UUID ownerId){
-        Project newProject = serviceMangeProject.createProject(name, ownerId);
+    public ResponseEntity<GeneralResponse<Project>> createProject (@RequestBody CreateProjectRequest request, @RequestHeader("X-User-Id") UUID ownerId){
+        Project newProject = serviceMangeProject.createProject(request.getName(), ownerId);
         return ResponseEntity.ok(GeneralResponse.success(newProject, "Project created Successfully"));
     }
 
