@@ -26,12 +26,13 @@ jobs:
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/zwing-backend:${{ github.sha }}
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/zwing-backend:latest
 
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
           app-name: ${{ secrets.AZURE_APP_NAME }}
           images: ${{ secrets.ACR_LOGIN_SERVER }}/zwing-backend:${{ github.sha }}
-
-      # Note: App Service environment variables (Neon, Upstash, JWT, Google)
-      # are configured in Azure Portal → App Service → Settings → Environment variables
-      # They are NOT set here — that way secrets never appear in workflow files.
