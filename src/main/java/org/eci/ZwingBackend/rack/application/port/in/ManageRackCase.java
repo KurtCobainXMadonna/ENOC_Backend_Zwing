@@ -6,4 +6,5 @@ import java.util.UUID;
 public interface ManageRackCase {
     ChannelRack createRackForProject(UUID projectId);
     ChannelRack getRackByProject(UUID projectId);
+    ChannelRack updateBpm(UUID projectId, int bpm);
 }

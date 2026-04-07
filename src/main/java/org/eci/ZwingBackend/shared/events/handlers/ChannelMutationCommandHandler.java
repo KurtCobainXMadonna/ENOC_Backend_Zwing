@@ -3,7 +3,9 @@ package org.eci.ZwingBackend.shared.events.handlers;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eci.ZwingBackend.rack.application.port.in.ManageChannelCase;
+import org.eci.ZwingBackend.rack.application.port.in.ManageRackCase;
 import org.eci.ZwingBackend.rack.domain.model.Channel;
+import org.eci.ZwingBackend.rack.domain.model.ChannelRack;
 import org.eci.ZwingBackend.shared.events.commands.ChannelMutationCommand;
 import org.eci.ZwingBackend.shared.events.results.ChannelMutationResult;
 import org.eci.ZwingBackend.shared.events.results.RackErrorResult;
@@ -18,6 +20,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ChannelMutationCommandHandler {
     private final ManageChannelCase manageChannelCase;
+    private final ManageRackCase manageRackCase;
     private final ApplicationEventPublisher eventPublisher;
 
     @EventListener
@@ -64,6 +67,17 @@ public class ChannelMutationCommandHandler {
             eventPublisher.publishEvent(new ChannelMutationResult.StepToggled(cmd.getProjectId(), cmd.getUserId(), cmd.getChannelId(), cmd.getStepIndex(), newValue));
         } catch (Exception e) {
             log.error("[EventBus] ToggleStep failed: {}", e.getMessage());
+            eventPublisher.publishEvent(new RackErrorResult(cmd.getProjectId(), cmd.getUserId(), e.getMessage(), cmd.getUserId()));
+        }
+    }
+
+    @EventListener
+    public void handleUpdateBpm(ChannelMutationCommand.UpdateBpm cmd) {
+        try {
+            ChannelRack rack = manageRackCase.updateBpm(UUID.fromString(cmd.getProjectId()), cmd.getBpm());
+            eventPublisher.publishEvent(new ChannelMutationResult.BpmUpdated(cmd.getProjectId(), cmd.getUserId(), rack.getBpm()));
+        } catch (Exception e) {
+            log.error("[EventBus] UpdateBpm failed: {}", e.getMessage());
             eventPublisher.publishEvent(new RackErrorResult(cmd.getProjectId(), cmd.getUserId(), e.getMessage(), cmd.getUserId()));
         }
     }

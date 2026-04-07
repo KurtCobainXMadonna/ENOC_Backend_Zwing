@@ -52,4 +52,14 @@ public abstract class ChannelMutationResult extends RackResult {
             this.newValue = newValue;
         }
     }
+
+    @Getter
+    public static class BpmUpdated extends ChannelMutationResult {
+        private final int bpm;
+
+        public BpmUpdated(String projectId, String triggeredBy, int bpm) {
+            super(projectId, triggeredBy);
+            this.bpm = bpm;
+        }
+    }
 }

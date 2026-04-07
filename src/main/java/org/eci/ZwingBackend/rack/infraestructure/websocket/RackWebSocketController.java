@@ -81,6 +81,16 @@ public class RackWebSocketController {
                 payload.get("active") == null || (Boolean) payload.get("active")));
     }
 
+    @MessageMapping("/rack/{projectId}/bpm/update")
+    public void updateBpm(@DestinationVariable String projectId, @Payload Map<String, Integer> payload, SimpMessageHeaderAccessor headers) {
+        String userId = getUserId(headers);
+        String email = getEmail(headers);
+
+        eventBus.publishEvent(new ChannelMutationCommand.UpdateBpm(
+                projectId, userId, email,
+                payload.getOrDefault("bpm", 120)));
+    }
+
     @MessageMapping("/rack/{projectId}/playback/start")
     public void startPlayback(@DestinationVariable String projectId, SimpMessageHeaderAccessor headers) {
         String userId = getUserId(headers);

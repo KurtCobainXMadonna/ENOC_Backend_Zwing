@@ -63,4 +63,14 @@ public abstract class ChannelMutationCommand extends RackCommand {
             this.stepIndex = stepIndex;
         }
     }
+
+    @Getter
+    public static class UpdateBpm extends ChannelMutationCommand {
+        private final int bpm;
+
+        public UpdateBpm(String projectId, String userId, String userEmail, int bpm) {
+            super(projectId, userId, userEmail);
+            this.bpm = bpm;
+        }
+    }
 }

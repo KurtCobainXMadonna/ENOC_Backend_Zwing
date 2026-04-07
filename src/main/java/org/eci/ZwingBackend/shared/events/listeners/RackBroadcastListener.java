@@ -51,6 +51,10 @@ public class RackBroadcastListener {
     public void onStepToggled(ChannelMutationResult.StepToggled event) {
         broadcast(event.getProjectId(), new RackEvent("STEP_TOGGLED", new StepToggledPayload(UUID.fromString(event.getChannelId()), event.getStepIndex(), event.isNewValue()), event.getTriggeredBy()));
     }
+    @EventListener
+    public void onBpmUpdated(ChannelMutationResult.BpmUpdated event) {
+        broadcast(event.getProjectId(), new RackEvent("BPM_UPDATED", Map.of("bpm", event.getBpm()), event.getTriggeredBy()));
+    }
 
     @EventListener
     public void onPlaybackStarted(PlaybackResult.PlaybackStarted event) {

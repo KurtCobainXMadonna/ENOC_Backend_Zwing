@@ -35,4 +35,13 @@ public class RackService implements ManageRackCase {
             return fromDb;
         });
     }
+
+    @Override
+    public ChannelRack updateBpm(UUID projectId, int bpm) {
+        ChannelRack rack = getRackByProject(projectId);
+        int boundedBpm = Math.max(40, Math.min(240, bpm));
+        rack.setBpm(boundedBpm);
+        rackCache.cacheRack(projectId, rack);
+        return rack;
+    }
 }
