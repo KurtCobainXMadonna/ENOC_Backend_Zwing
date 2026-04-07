@@ -1,8 +1,10 @@
 package org.eci.ZwingBackend.auth.application.service;
 
 import org.eci.ZwingBackend.auth.application.port.in.AuthenticateWithGoogleUseCase;
+import org.eci.ZwingBackend.auth.application.port.in.LogoutUseCase;
 import org.eci.ZwingBackend.auth.application.port.in.UserDeleteCase;
 import org.eci.ZwingBackend.auth.application.port.out.GoogleAuthPort;
+import org.eci.ZwingBackend.auth.application.port.out.TokenBlacklistPort;
 import org.eci.ZwingBackend.auth.application.port.out.TokenGeneratorPort;
 import org.eci.ZwingBackend.auth.application.port.out.UserRepositoryAuthOutPort;
 import org.eci.ZwingBackend.auth.domain.model.GoogleUserData;
@@ -21,11 +23,12 @@ import java.util.UUID;
 
 @Service
 @AllArgsConstructor
-public class UserAuthService implements AuthenticateWithGoogleUseCase, UserDeleteCase {
+public class UserAuthService implements AuthenticateWithGoogleUseCase, UserDeleteCase, LogoutUseCase {
     private final GoogleAuthPort googleAuthAdapter;
     private final UserRepositoryAuthOutPort userRepository;
     private final TokenGeneratorPort tokenGeneratorPort;
     private ApplicationEventPublisher eventPublisher;
+    private final TokenBlacklistPort tokenBlacklistPort;
 
     @Override
     @Transactional
@@ -56,5 +59,10 @@ public class UserAuthService implements AuthenticateWithGoogleUseCase, UserDelet
         userRepository.delete(user);
 
         eventPublisher.publishEvent(new UserDeletedEvent(userId));
+    }
+
+    @Override
+    public void logout(String token) {
+        tokenBlacklistPort.blacklistToken(token, 86400);
     }
 }

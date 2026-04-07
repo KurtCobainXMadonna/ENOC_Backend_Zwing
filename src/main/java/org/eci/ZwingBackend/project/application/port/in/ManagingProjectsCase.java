@@ -11,4 +11,6 @@ public interface ManagingProjectsCase {
 
     List<Project> getOwnedProjects(UUID ownerId);
     List<Project> getCollaboratingProjects(UUID collaboratorId);
+
+    Project getProjectById(UUID projectId, UUID requesterId);
 }

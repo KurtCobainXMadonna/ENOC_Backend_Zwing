@@ -2,10 +2,9 @@ package org.eci.ZwingBackend.project.infraestructure.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.eci.ZwingBackend.auth.infraestructure.persistence.entity.UserEntity;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @Data
@@ -17,9 +16,18 @@ public class ProjectEntity {
     @Column(nullable = false)
     private String projectName;
 
-    @Column(nullable = false)
-    private UUID projectOwner;
+    @ManyToOne
+    @JoinColumn(name = "owner_id", nullable = false)
+    private UserEntity projectOwner;
 
-    @ElementCollection
-    private List<UUID> collaborators = new ArrayList<>();
+    @ManyToMany
+    @JoinTable(
+            name = "project_collaborators",
+            joinColumns = @JoinColumn(name = "project_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private Set<UserEntity> collaborators = new HashSet<>();
+
+    @Column
+    private UUID channelRackId;
 }
