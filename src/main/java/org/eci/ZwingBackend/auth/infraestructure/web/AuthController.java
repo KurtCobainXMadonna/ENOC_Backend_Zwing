@@ -6,8 +6,9 @@ import org.eci.ZwingBackend.auth.application.port.in.LogoutUseCase;
 import org.eci.ZwingBackend.auth.infraestructure.web.dto.request.GoogleAuthRequest;
 import org.eci.ZwingBackend.auth.infraestructure.web.dto.response.AuthResponse;
 import org.eci.ZwingBackend.shared.dto.GeneralResponse;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,13 +30,14 @@ public class AuthController {
     public ResponseEntity<GeneralResponse<AuthResponse>> authenticateWithGoogle(@RequestBody GoogleAuthRequest request, HttpServletResponse response) {
         AuthResponse result = authenticateUseCase.authenticate(request.getIdToken());
 
-        Cookie jwtCookie = new Cookie("jwt_token", result.getToken());
-        jwtCookie.setHttpOnly(true);
-        jwtCookie.setSecure(true);
-        jwtCookie.setPath("/");
-        jwtCookie.setMaxAge(24 * 60 * 60);
-
-        response.addCookie(jwtCookie);
+        ResponseCookie jwtCookie = ResponseCookie.from("jwt_token", result.getToken())
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(24 * 60 * 60)
+                .sameSite("None")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
         String message = result.isNewUser() ? "User Registered Successfully" : "Successful Log In";
         return ResponseEntity.ok(GeneralResponse.success(result, message));
     }
@@ -44,7 +46,7 @@ public class AuthController {
     public ResponseEntity<GeneralResponse<String>> logout(HttpServletRequest request, HttpServletResponse response) {
         String token = null;
         if (request.getCookies() != null) {
-            for (Cookie cookie : request.getCookies()) {
+            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
                 if ("jwt_token".equals(cookie.getName())) {
                     token = cookie.getValue();
                     break;
@@ -56,12 +58,14 @@ public class AuthController {
             logoutUseCase.logout(token);
         }
 
-        Cookie jwtCookie = new Cookie("jwt_token", null);
-        jwtCookie.setHttpOnly(true);
-        jwtCookie.setSecure(true);
-        jwtCookie.setPath("/");
-        jwtCookie.setMaxAge(0);
-        response.addCookie(jwtCookie);
+        ResponseCookie jwtCookie = ResponseCookie.from("jwt_token", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("None")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, jwtCookie.toString());
         return ResponseEntity.ok(GeneralResponse.success(null, "Successfully logged out"));
     }
 }
