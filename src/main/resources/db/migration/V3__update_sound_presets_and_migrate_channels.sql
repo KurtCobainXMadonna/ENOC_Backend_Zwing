@@ -29,8 +29,8 @@ UPDATE channels SET sound_id = 'b2000000-0000-0000-0000-000000000002' WHERE soun
 UPDATE channels SET sound_id = 'b2000000-0000-0000-0000-000000000001' WHERE sound_id = 'a5000000-0000-0000-0000-000000000001';
 
 -- HIHATS & CLAPS (Handling the commented-out IDs from V2 just in case they exist)
-UPDATE channels SET sound_id = 'b1000000-0000-0000-0000-000000000004' WHERE sound_id LIKE 'a3000%';
-UPDATE channels SET sound_id = 'b1000000-0000-0000-0000-000000000003' WHERE sound_id LIKE 'a4000%';
+UPDATE channels SET sound_id = 'b1000000-0000-0000-0000-000000000004' WHERE sound_id::text LIKE 'a3000%';
+UPDATE channels SET sound_id = 'b1000000-0000-0000-0000-000000000003' WHERE sound_id::text LIKE 'a4000%';
 
 -- 3. Final Cleanup: Delete the old records that no longer have any references
 DELETE FROM sound_presets WHERE sound_id::text LIKE 'a%';
