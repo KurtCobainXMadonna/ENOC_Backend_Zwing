@@ -2,6 +2,9 @@ package org.eci.ZwingBackend.shared.websocket;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eci.ZwingBackend.presence.application.port.in.ManagePresenceCase;
+import org.eci.ZwingBackend.presence.domain.model.Presence;
+import org.eci.ZwingBackend.presence.infrastructure.websocket.dto.PresenceEvent;
 import org.eci.ZwingBackend.rack.application.service.RackSessionService;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -12,53 +15,45 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import java.util.Map;
 import java.util.UUID;
 
-/**
- * Handles WebSocket session disconnect events.
- *
- * IMPORTANT: When a user clicks "Back", TWO things happen:
- *   1. The frontend sends a STOMP /leave message → ProjectWebSocketController calls unregisterUserFromProject
- *   2. The WebSocket closes → SessionDisconnectEvent fires → handleSessionDisconnect runs
- *
- * To prevent double-decrement, unregisterUserFromProject deletes the session mapping from Redis.
- * When handleSessionDisconnect fires, it checks if the mapping still exists — if not, it skips.
- * This way, only ONE path decrements the counter.
- */
 @Slf4j
 @Component
 @AllArgsConstructor
 public class WebSocketEventListener {
-
     private final RackSessionService rackSessionService;
     private final RedisTemplate<String, String> redisTemplate;
     private final SimpMessagingTemplate messagingTemplate;
+    private final ManagePresenceCase presenceCase;
 
-    private static final String PRESENCE_PREFIX = "project_presence:";
     private static final String SESSION_PREFIX = "ws_session:";
 
-    // ── Called by ProjectWebSocketController on join/leave ─────────────────────
-
-    public void registerUserInProject(String sessionId, String userId, String projectId) {
+    public Presence registerUserInProject(String sessionId, String userId, String projectId,
+                                          String email, String displayName) {
         String sessionData = projectId + "::" + userId;
         redisTemplate.opsForValue().set(SESSION_PREFIX + sessionId, sessionData);
-        redisTemplate.opsForValue().increment(PRESENCE_PREFIX + projectId);
-        log.info("[Presence] User {} joined project {}. Session: {}", userId, projectId, sessionId);
+
+        UUID projectUuid = UUID.fromString(projectId);
+        Presence presence = presenceCase.userJoined(projectUuid, userId, email, displayName);
+
+        broadcastPresence(projectUuid, "JOINED", userId);
+        return presence;
     }
 
-    /**
-     * Explicit leave (user clicked "Back"). Cleans up session mapping AND decrements.
-     * Deleting the session key prevents handleSessionDisconnect from double-decrementing.
-     */
     public void unregisterUserFromProject(String sessionId, String userId, String projectId) {
         redisTemplate.delete(SESSION_PREFIX + sessionId);
-        decrementAndFlushIfEmpty(projectId, userId);
-    }
 
-    // ── Disconnect handler ────────────────────────────────────────────────────
+        UUID projectUuid = UUID.fromString(projectId);
+        boolean wasLastUser = presenceCase.userLeft(projectUuid, userId);
+
+        broadcastPresence(projectUuid, "LEFT", userId);
+
+        if (wasLastUser) {
+            flushProject(projectUuid);
+        }
+    }
 
     @EventListener
     public void handleSessionDisconnect(SessionDisconnectEvent event) {
-        Map<String, Object> sessionAttributes = event.getMessage().getHeaders()
-                .get("simpSessionAttributes", Map.class);
+        Map<String, Object> sessionAttributes = event.getMessage().getHeaders().get("simpSessionAttributes", Map.class);
 
         if (sessionAttributes == null) return;
 
@@ -84,9 +79,10 @@ public class WebSocketEventListener {
 
         log.info("[Presence] User {} ({}) disconnected from project {}.", userId, email, projectId);
 
-        // Release locks
+        UUID projectUuid = UUID.fromString(projectId);
+
+        // Release locks held by this user (unchanged from previous behavior).
         try {
-            UUID projectUuid = UUID.fromString(projectId);
             rackSessionService.releasePlaybackLockIfHolder(projectUuid, userId);
             rackSessionService.releaseAllChannelLocks(projectUuid, userId);
         } catch (Exception e) {
@@ -94,39 +90,39 @@ public class WebSocketEventListener {
                     userId, projectId, e.getMessage());
         }
 
-        // Broadcast departure
-        messagingTemplate.convertAndSend(
-                "/topic/project/" + projectId + "/presence",
-                Map.of("userId", userId, "email", email != null ? email : "", "status", "LEFT")
-        );
-
-        // Broadcast lock release to rack topic
+        // Broadcast lock release on rack topic so other clients clear any "locked by X" UI.
         messagingTemplate.convertAndSend(
                 "/topic/rack/" + projectId,
-                Map.of("type", "USER_DISCONNECTED", "payload", Map.of("userId", userId), "triggeredBy", userId)
+                Map.of("type", "USER_DISCONNECTED",
+                        "payload", Map.of("userId", userId),
+                        "triggeredBy", userId)
         );
 
-        // Decrement presence and flush if last user
-        decrementAndFlushIfEmpty(projectId, userId);
+        // Update presence and flush if last user.
+        boolean wasLastUser = presenceCase.userLeft(projectUuid, userId);
+        broadcastPresence(projectUuid, "LEFT", userId);
+
+        if (wasLastUser) {
+            flushProject(projectUuid);
+        }
     }
 
-    // ── Internal ──────────────────────────────────────────────────────────────
+    private void broadcastPresence(UUID projectId, String type, String changedUserId) {
+        PresenceEvent event = new PresenceEvent(
+                type,
+                changedUserId,
+                presenceCase.getRoster(projectId)
+        );
+        messagingTemplate.convertAndSend("/topic/project/" + projectId + "/presence", event);
+    }
 
-    private void decrementAndFlushIfEmpty(String projectId, String userId) {
-        Long remaining = redisTemplate.opsForValue().decrement(PRESENCE_PREFIX + projectId);
-
-        if (remaining == null || remaining <= 0) {
-            redisTemplate.delete(PRESENCE_PREFIX + projectId);
-            log.info("[Presence] Last user left project {}. Flushing rack state to PostgreSQL.", projectId);
-
-            try {
-                rackSessionService.flushToDatabase(UUID.fromString(projectId));
-            } catch (Exception e) {
-                log.error("[Presence] Failed to flush rack state for project {}: {}",
-                        projectId, e.getMessage());
-            }
-        } else {
-            log.info("[Presence] {} user(s) remaining in project {}.", remaining, projectId);
+    private void flushProject(UUID projectId) {
+        log.info("[Presence] Last user left project {}. Flushing rack state to PostgreSQL.", projectId);
+        try {
+            rackSessionService.flushToDatabase(projectId);
+        } catch (Exception e) {
+            log.error("[Presence] Failed to flush rack state for project {}: {}",
+                    projectId, e.getMessage());
         }
     }
 }
