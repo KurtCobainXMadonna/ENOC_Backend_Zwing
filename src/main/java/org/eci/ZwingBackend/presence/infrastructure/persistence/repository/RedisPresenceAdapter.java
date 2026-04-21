@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.eci.ZwingBackend.presence.application.port.out.PresenceStorePort;
 import org.eci.ZwingBackend.presence.domain.model.Presence;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
@@ -21,7 +22,7 @@ public class RedisPresenceAdapter implements PresenceStorePort {
     private final RedisTemplate<String, String> redis;
     private final ObjectMapper mapper;
 
-    public RedisPresenceAdapter(RedisTemplate<String, String> redis, ObjectMapper mapper) {
+    public RedisPresenceAdapter(@Qualifier("redisTemplate") RedisTemplate<String, String> redis, ObjectMapper mapper) {
         this.redis = redis;
         this.mapper = mapper;
     }
