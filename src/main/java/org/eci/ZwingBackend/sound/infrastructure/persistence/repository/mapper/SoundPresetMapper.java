@@ -12,7 +12,9 @@ public class SoundPresetMapper {
                 entity.getName(),
                 entity.getCategory(),
                 entity.getBlobUrl(),
-                entity.getDescription()
+                entity.getDescription(),
+                entity.getProjectId(),
+                entity.getUploadedBy()
         );
     }
 
@@ -23,6 +25,8 @@ public class SoundPresetMapper {
         entity.setCategory(domain.getCategory());
         entity.setBlobUrl(domain.getBlobUrl());
         entity.setDescription(domain.getDescription());
+        entity.setProjectId(domain.getProjectId());
+        entity.setUploadedBy(domain.getUploadedBy());
         return entity;
     }
 }

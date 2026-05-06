@@ -25,4 +25,10 @@ public class SoundPresetEntity {
     private String blobUrl;
 
     private String description;
+
+    @Column(name = "project_id")
+    private UUID projectId;
+
+    @Column(name = "uploaded_by")
+    private UUID uploadedBy;
 }

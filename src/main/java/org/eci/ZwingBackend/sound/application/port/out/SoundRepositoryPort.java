@@ -8,8 +8,10 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface SoundRepositoryPort {
-    List<SoundPreset> findAll();
-    List<SoundPreset> findByCategory(SoundCategory category);
+    List<SoundPreset> findAllGlobal();
+    List<SoundPreset> findGlobalByCategory(SoundCategory category);
+    List<SoundPreset> findVisibleToProject(UUID projectId);
     Optional<SoundPreset> findById(UUID soundId);
     SoundPreset save(SoundPreset soundPreset);
+    void deleteById(UUID soundId);
 }
