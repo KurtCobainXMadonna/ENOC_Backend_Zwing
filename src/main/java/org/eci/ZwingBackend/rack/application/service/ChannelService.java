@@ -45,6 +45,7 @@ public class ChannelService implements ManageChannelCase {
 
     private void saveLiveRack(UUID projectId, ChannelRack rack) {
         rackCache.cacheRack(projectId, rack);
+        rackCache.markDirty(projectId);
     }
 
     // ── mutations ─────────────────────────────────────────────────────────────
