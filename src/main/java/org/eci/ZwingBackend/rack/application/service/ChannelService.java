@@ -45,6 +45,7 @@ public class ChannelService implements ManageChannelCase {
 
     private void saveLiveRack(UUID projectId, ChannelRack rack) {
         rackCache.cacheRack(projectId, rack);
+        rackCache.markDirty(projectId);
     }
 
     // ── mutations ─────────────────────────────────────────────────────────────
@@ -130,9 +131,14 @@ public class ChannelService implements ManageChannelCase {
             throw new RuntimeException("Cannot edit channels during playback.");
         }
 
-        String lockHolder = lockCase.getChannelLockHolder(projectId, channelId);
-        if (!requesterId.toString().equals(lockHolder)) {
-            throw new RuntimeException("You do not hold the lock on this channel.");
+        // Lock is required only if changing name or soundId (critical properties)
+        // Volume and active (mute) can be changed freely without lock
+        boolean needsLock = name != null || soundId != null;
+        if (needsLock) {
+            String lockHolder = lockCase.getChannelLockHolder(projectId, channelId);
+            if (!requesterId.toString().equals(lockHolder)) {
+                throw new RuntimeException("You do not hold the lock on this channel.");
+            }
         }
 
         ReentrantLock lock = getProjectLock(projectId);

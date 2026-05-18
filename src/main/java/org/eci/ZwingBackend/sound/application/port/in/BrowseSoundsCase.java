@@ -10,4 +10,5 @@ public interface BrowseSoundsCase {
     List<SoundPreset> getAllSounds();
     List<SoundPreset> getSoundsByCategory(SoundCategory category);
     SoundPreset getSoundById(UUID soundId);
+    List<SoundPreset> getSoundsForProject(UUID projectId, UUID requesterId);
 }

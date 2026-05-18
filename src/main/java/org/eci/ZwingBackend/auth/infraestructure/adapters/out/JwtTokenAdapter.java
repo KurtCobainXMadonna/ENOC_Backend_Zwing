@@ -13,12 +13,12 @@ import java.util.Date;
 
 @Component
 public class JwtTokenAdapter implements TokenGeneratorPort {
-
     private final SecretKey key;
-    private final long expirationTime = 86400000;
+    private final long expirationMillis;
 
-    public JwtTokenAdapter(@Value("${jwt.secret}") String secret) {
+    public JwtTokenAdapter(@Value("${jwt.secret}") String secret, @Value("${auth.access-token.ttl-seconds:900}") long ttlSeconds) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.expirationMillis = ttlSeconds * 1000L;
     }
 
     @Override
@@ -27,8 +27,12 @@ public class JwtTokenAdapter implements TokenGeneratorPort {
                 .subject(user.getEmail())
                 .claim("userId", user.getUserId())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expirationTime))
+                .expiration(new Date(System.currentTimeMillis() + expirationMillis))
                 .signWith(key)
                 .compact();
+    }
+
+    public long getExpirationSeconds() {
+        return expirationMillis / 1000L;
     }
 }

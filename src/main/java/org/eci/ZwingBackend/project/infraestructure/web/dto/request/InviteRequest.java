@@ -9,5 +9,4 @@ import java.util.UUID;
 @NoArgsConstructor
 public class InviteRequest {
     private UUID projectId;
-    private String inviteeEmail;
 }

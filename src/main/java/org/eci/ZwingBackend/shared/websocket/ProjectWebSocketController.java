@@ -3,40 +3,21 @@ package org.eci.ZwingBackend.shared.websocket;
 import lombok.AllArgsConstructor;
 import org.eci.ZwingBackend.project.application.port.in.ManagingProjectsCase;
 import org.eci.ZwingBackend.project.domain.model.Project;
-import org.eci.ZwingBackend.shared.websocket.dto.UserPresenceMessage;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.util.UUID;
 
-/**
- * Handles all WebSocket messages related to project rooms.
- *
- * Flow:
- * 1. User opens a project → frontend sends to /app/project/{projectId}/join
- * 2. Server validates membership, registers presence, then broadcasts to
- *    /topic/project/{projectId}/presence so everyone sees who joined.
- * 3. When user leaves (browser close / explicit leave), frontend sends to
- *    /app/project/{projectId}/leave and server broadcasts departure.
- *    If the user disconnects without sending leave, WebSocketEventListener
- *    handles cleanup via SessionDisconnectEvent.
- */
 @Controller
 @AllArgsConstructor
 public class ProjectWebSocketController {
-
     private final SimpMessagingTemplate messagingTemplate;
     private final ManagingProjectsCase managingProjectsCase;
-    private final WebSocketEventListener presenceTracker;       // ← ADDED
+    private final WebSocketEventListener presenceTracker;
 
-    /**
-     * Client sends to: /app/project/{projectId}/join
-     * Server broadcasts to: /topic/project/{projectId}/presence
-     */
     @MessageMapping("/project/{projectId}/join")
     public void joinProject(@DestinationVariable String projectId,
                             SimpMessageHeaderAccessor headerAccessor) {
@@ -45,18 +26,16 @@ public class ProjectWebSocketController {
         String sessionId = headerAccessor.getSessionId();
 
         try {
+            // Membership check — throws if user is not a collaborator.
             Project project = managingProjectsCase.getProjectById(
                     UUID.fromString(projectId), UUID.fromString(userId));
 
-            // Register presence in Redis so disconnect handler can find this user
-            presenceTracker.registerUserInProject(sessionId, userId, projectId);
+            // Register presence (assigns color, broadcasts roster internally).
+            // displayName falls back to email inside PresenceService if null.
+            presenceTracker.registerUserInProject(sessionId, userId, projectId, email, null);
 
-            UserPresenceMessage presence = new UserPresenceMessage(
-                    userId, email, "JOINED", project.getProjectName());
-            messagingTemplate.convertAndSend(
-                    "/topic/project/" + projectId + "/presence", presence);
-
-            System.out.println("[WS] " + email + " joined project " + projectId);
+            System.out.println("[WS] " + email + " joined project " + projectId
+                    + " (" + project.getProjectName() + ")");
 
         } catch (RuntimeException e) {
             System.err.println("[WS ERROR] Failed to join project: " + e.getMessage());
@@ -65,10 +44,6 @@ public class ProjectWebSocketController {
         }
     }
 
-    /**
-     * Client sends to: /app/project/{projectId}/leave
-     * Server broadcasts to: /topic/project/{projectId}/presence
-     */
     @MessageMapping("/project/{projectId}/leave")
     public void leaveProject(@DestinationVariable String projectId,
                              SimpMessageHeaderAccessor headerAccessor) {
@@ -76,12 +51,8 @@ public class ProjectWebSocketController {
         String email = (String) headerAccessor.getSessionAttributes().get("email");
         String sessionId = headerAccessor.getSessionId();
 
-        // Unregister presence (and flush if last user)
+        // Unregister presence (releases color, broadcasts roster, flushes if last user).
         presenceTracker.unregisterUserFromProject(sessionId, userId, projectId);
-
-        UserPresenceMessage presence = new UserPresenceMessage(userId, email, "LEFT", null);
-        messagingTemplate.convertAndSend(
-                "/topic/project/" + projectId + "/presence", presence);
 
         System.out.println("[WS] " + email + " left project " + projectId);
     }

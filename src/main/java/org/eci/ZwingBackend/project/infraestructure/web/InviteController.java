@@ -18,9 +18,8 @@ public class InviteController {
 
     @PostMapping
     public ResponseEntity<GeneralResponse<Map<String, String>>> invite(@RequestBody InviteRequest request, @RequestHeader("X-User-Id") UUID requesterId) {
-        String token = inviteCollaboratorCase.inviteCollaborator(request.getProjectId(), request.getInviteeEmail(), requesterId);
-
-        return ResponseEntity.ok(GeneralResponse.success(Map.of("inviteToken", token), "Invite created. Share this token with " + request.getInviteeEmail()));
+        String token = inviteCollaboratorCase.inviteCollaborator(request.getProjectId(), requesterId);
+        return ResponseEntity.ok(GeneralResponse.success(Map.of("inviteToken", token), "Invite link generated successfully. Share this token with your collaborators."));
     }
 
     @PostMapping("/accept")

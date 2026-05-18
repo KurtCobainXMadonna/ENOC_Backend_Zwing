@@ -126,6 +126,12 @@
 			<artifactId>flyway-database-postgresql</artifactId>
 			<version>10.10.0</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.azure</groupId>
+			<artifactId>azure-storage-blob</artifactId>
+			<version>12.27.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>

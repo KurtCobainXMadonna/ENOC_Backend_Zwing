@@ -4,7 +4,6 @@ import org.eci.ZwingBackend.auth.application.port.in.AuthenticateWithGoogleUseCa
 import org.eci.ZwingBackend.auth.application.port.in.LogoutUseCase;
 import org.eci.ZwingBackend.auth.application.port.in.UserDeleteCase;
 import org.eci.ZwingBackend.auth.application.port.out.GoogleAuthPort;
-import org.eci.ZwingBackend.auth.application.port.out.TokenBlacklistPort;
 import org.eci.ZwingBackend.auth.application.port.out.TokenGeneratorPort;
 import org.eci.ZwingBackend.auth.application.port.out.UserRepositoryAuthOutPort;
 import org.eci.ZwingBackend.auth.domain.model.GoogleUserData;
@@ -16,8 +15,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,8 +24,8 @@ public class UserAuthService implements AuthenticateWithGoogleUseCase, UserDelet
     private final GoogleAuthPort googleAuthAdapter;
     private final UserRepositoryAuthOutPort userRepository;
     private final TokenGeneratorPort tokenGeneratorPort;
-    private ApplicationEventPublisher eventPublisher;
-    private final TokenBlacklistPort tokenBlacklistPort;
+    private final ApplicationEventPublisher eventPublisher;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     @Transactional
@@ -46,11 +43,12 @@ public class UserAuthService implements AuthenticateWithGoogleUseCase, UserDelet
         } else {
             user = optionalUser.get();
         }
-        String internalToken = tokenGeneratorPort.generateToken(user);
 
-        return new AuthResponse(internalToken, user.getName(), user.getEmail(), isNewUser);
+        String accessToken = tokenGeneratorPort.generateToken(user);
+        String refreshToken = refreshTokenService.issue(user);
+
+        return new AuthResponse(accessToken, refreshToken, user.getName(), user.getEmail(), isNewUser);
     }
-
 
     @Override
     @Transactional
@@ -62,7 +60,7 @@ public class UserAuthService implements AuthenticateWithGoogleUseCase, UserDelet
     }
 
     @Override
-    public void logout(String token) {
-        tokenBlacklistPort.blacklistToken(token, 86400);
+    public void logout(String refreshToken) {
+        refreshTokenService.revoke(refreshToken);
     }
 }
