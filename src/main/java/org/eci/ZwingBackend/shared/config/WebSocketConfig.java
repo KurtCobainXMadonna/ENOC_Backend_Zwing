@@ -2,6 +2,7 @@ package org.eci.ZwingBackend.shared.config;
 
 import org.eci.ZwingBackend.shared.websocket.JwtHandshakeInterceptor;
 import org.eci.ZwingBackend.shared.websocket.StompPrincipalInterceptor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
@@ -9,12 +10,16 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 
+import java.util.Arrays;
+
 @Configuration
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
-
     private final JwtHandshakeInterceptor jwtHandshakeInterceptor;
     private final StompPrincipalInterceptor stompPrincipalInterceptor;
+
+    @Value("${app.cors.allowed-origins}")
+    private String allowedOriginsCsv;
 
     public WebSocketConfig(JwtHandshakeInterceptor jwtHandshakeInterceptor,
                            StompPrincipalInterceptor stompPrincipalInterceptor) {
@@ -31,8 +36,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        String[] origins = Arrays.stream(allowedOriginsCsv.split(",")).map(String::trim).filter(s -> !s.isEmpty()).toArray(String[]::new);
         registry.addEndpoint("/ws")
-                .setAllowedOriginPatterns("http://localhost:3000", "http://localhost:5173", "https://enoc-frontend.vercel.app")
+                .setAllowedOriginPatterns(origins)
                 .addInterceptors(jwtHandshakeInterceptor)
                 .withSockJS();
     }
