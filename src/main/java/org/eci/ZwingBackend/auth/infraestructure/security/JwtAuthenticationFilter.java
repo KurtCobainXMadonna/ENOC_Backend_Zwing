@@ -9,7 +9,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
-import org.eci.ZwingBackend.auth.infraestructure.security.config.TokenBlacklistService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,20 +22,14 @@ import java.util.*;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
     @Value("${jwt.secret}")
     private String jwtSecret;
-    private final TokenBlacklistService blacklistService;
-
-    public JwtAuthenticationFilter(TokenBlacklistService blacklistService) {
-        this.blacklistService = blacklistService;
-    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        if (request.getRequestURI().startsWith("/auth/")) {
+        if (request.getRequestURI().startsWith("/auth/")|| request.getRequestURI().startsWith("/actuator/")|| request.getRequestURI().startsWith("/ws/")) {
             filterChain.doFilter(request, response);
             return;
         }
@@ -64,15 +57,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String userId = String.valueOf(claims.get("userId"));
             String email = claims.getSubject();
 
-            if (blacklistService.isTokenBlacklisted(token)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
-            }
-            if (blacklistService.isUserBlacklisted(userId)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
-            }
-
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(email, null, Collections.emptyList());
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
@@ -82,7 +66,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             filterChain.doFilter(wrappedRequest, response);
 
         } catch (Exception e) {
-            System.out.println("Error validando el token: " + e.getMessage());
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Invalid or expired token: " + e.getMessage());
         }

@@ -20,13 +20,18 @@ public class SoundRepositoryAdapter implements SoundRepositoryPort {
     private final SoundPresetMapper mapper;
 
     @Override
-    public List<SoundPreset> findAll() {
-        return jpaRepository.findAll().stream().map(mapper::toDomain).collect(Collectors.toList());
+    public List<SoundPreset> findAllGlobal() {
+        return jpaRepository.findByProjectIdIsNull().stream().map(mapper::toDomain).collect(Collectors.toList());
     }
 
     @Override
-    public List<SoundPreset> findByCategory(SoundCategory category) {
-        return jpaRepository.findByCategory(category).stream().map(mapper::toDomain).collect(Collectors.toList());
+    public List<SoundPreset> findGlobalByCategory(SoundCategory category) {
+        return jpaRepository.findByProjectIdIsNullAndCategory(category).stream().map(mapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<SoundPreset> findVisibleToProject(UUID projectId) {
+        return jpaRepository.findByProjectIdIsNullOrProjectId(projectId).stream().map(mapper::toDomain).collect(Collectors.toList());
     }
 
     @Override
@@ -37,5 +42,10 @@ public class SoundRepositoryAdapter implements SoundRepositoryPort {
     @Override
     public SoundPreset save(SoundPreset soundPreset) {
         return mapper.toDomain(jpaRepository.save(mapper.toEntity(soundPreset)));
+    }
+
+    @Override
+    public void deleteById(UUID soundId) {
+        jpaRepository.deleteById(soundId);
     }
 }

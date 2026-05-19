@@ -8,5 +8,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface SoundRepository extends JpaRepository<SoundPresetEntity, UUID> {
-    List<SoundPresetEntity> findByCategory(SoundCategory category);
+    List<SoundPresetEntity> findByProjectIdIsNull();
+    List<SoundPresetEntity> findByProjectIdIsNullAndCategory(SoundCategory category);
+    List<SoundPresetEntity> findByProjectIdIsNullOrProjectId(UUID projectId);
+    List<SoundPresetEntity> findByProjectId(UUID projectId);
 }

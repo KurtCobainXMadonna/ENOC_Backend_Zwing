@@ -15,6 +15,8 @@ public class SoundPresetResponse {
     private SoundCategory category;
     private String blobUrl;
     private String description;
+    private UUID projectId;
+    private UUID uploadedBy;
 
     public static SoundPresetResponse from(SoundPreset preset) {
         return new SoundPresetResponse(
@@ -22,7 +24,9 @@ public class SoundPresetResponse {
                 preset.getName(),
                 preset.getCategory(),
                 preset.getBlobUrl(),
-                preset.getDescription()
+                preset.getDescription(),
+                preset.getProjectId(),
+                preset.getUploadedBy()
         );
     }
 }

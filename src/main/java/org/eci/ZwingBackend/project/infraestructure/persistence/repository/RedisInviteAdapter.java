@@ -17,19 +17,19 @@ public class RedisInviteAdapter implements InviteRepositoryPort {
     private static final String PREFIX = "invite:";
 
     @Override
-    public void saveInvite(String token, UUID projectId, String inviteeEmail, long ttlSeconds) {
-        String value = projectId.toString() + "::" + inviteeEmail;
+    public void saveInvite(String token, UUID projectId, long ttlSeconds) {
+        String value = projectId.toString();
         redisTemplate.opsForValue().set(PREFIX + token, value, ttlSeconds, TimeUnit.SECONDS);
     }
 
     @Override
-    public Optional<InviteData> findInvite(String token) {
+    public Optional<UUID> findProjectIdByToken(String token) {
         String value = redisTemplate.opsForValue().get(PREFIX + token);
-        if (value == null) return Optional.empty();
-        String[] parts = value.split("::");
-        if (parts.length != 2) return Optional.empty();
+        if (value == null) {
+            return Optional.empty();
+        }
 
-        return Optional.of(new InviteData(UUID.fromString(parts[0]), parts[1]));
+        return Optional.of(UUID.fromString(value));
     }
 
     @Override

@@ -5,7 +5,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import org.eci.ZwingBackend.auth.infraestructure.security.config.TokenBlacklistService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -29,12 +28,6 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
 
     @Value("${jwt.secret}")
     private String jwtSecret;
-
-    private final TokenBlacklistService blacklistService;
-
-    public JwtHandshakeInterceptor(TokenBlacklistService blacklistService) {
-        this.blacklistService = blacklistService;
-    }
 
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
@@ -60,18 +53,6 @@ public class JwtHandshakeInterceptor implements HandshakeInterceptor {
             String userId = String.valueOf(claims.get("userId"));
             String email = claims.getSubject();
 
-            if (blacklistService.isTokenBlacklisted(token)) {
-                System.out.println("[WS] Handshake rejected: token is blacklisted (logged out)");
-                return false;
-            }
-
-            if (blacklistService.isUserBlacklisted(userId)) {
-                System.out.println("[WS] Handshake rejected: user is blacklisted (deleted)");
-                return false;
-            }
-
-            // These attributes travel with the WebSocket session for its entire lifetime.
-            // Any @MessageMapping method can read them via SimpMessageHeaderAccessor.
             attributes.put("userId", userId);
             attributes.put("email", email);
             attributes.put("token", token);

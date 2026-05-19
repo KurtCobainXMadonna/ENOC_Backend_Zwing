@@ -4,9 +4,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface InviteRepositoryPort {
-    void saveInvite(String token, UUID projectId, String inviteeEmail, long ttlSeconds);
-    Optional<InviteData> findInvite(String token);
+    void saveInvite(String token, UUID projectId, long ttlSeconds);
+    Optional<UUID> findProjectIdByToken(String token);
     void deleteInvite(String token);
-
-    record InviteData(UUID projectId, String inviteeEmail) {}
 }
