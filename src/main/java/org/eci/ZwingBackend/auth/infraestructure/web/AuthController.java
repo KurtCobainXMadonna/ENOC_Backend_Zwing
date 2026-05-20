@@ -91,7 +91,7 @@ public class AuthController {
                 .secure(true)
                 .path("/")
                 .maxAge(accessTokenAdapter.getExpirationSeconds())
-                .sameSite("None")
+                .sameSite("Lax")
                 .build();
     }
 
@@ -101,7 +101,7 @@ public class AuthController {
                 .secure(true)
                 .path(REFRESH_COOKIE_PATH)
                 .maxAge(refreshTokenService.ttlSeconds())
-                .sameSite("None")
+                .sameSite("Lax")
                 .build();
     }
 
@@ -111,7 +111,7 @@ public class AuthController {
                 .secure(true)
                 .path(path)
                 .maxAge(0)
-                .sameSite("None")
+                .sameSite("Lax")
                 .build();
     }
 
