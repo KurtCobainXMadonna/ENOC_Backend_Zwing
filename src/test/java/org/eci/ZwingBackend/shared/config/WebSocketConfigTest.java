@@ -15,6 +15,7 @@ import org.springframework.web.socket.config.annotation.StompWebSocketEndpointRe
 import org.springframework.web.socket.config.annotation.SockJsServiceRegistration;
 import org.springframework.messaging.simp.config.SimpleBrokerRegistration;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -56,6 +57,10 @@ class WebSocketConfigTest {
     @Test
     void configuresBrokerAndInboundChannel() {
         when(messageBrokerRegistry.enableSimpleBroker("/topic", "/queue")).thenReturn(simpleBrokerRegistration);
+        // ← estas dos líneas son las nuevas
+        when(simpleBrokerRegistration.setHeartbeatValue(new long[]{10000, 10000})).thenReturn(simpleBrokerRegistration);
+        when(simpleBrokerRegistration.setTaskScheduler(any())).thenReturn(simpleBrokerRegistration);
+
         when(stompEndpointRegistry.addEndpoint("/ws")).thenReturn(endpointRegistration);
         when(endpointRegistration.setAllowedOriginPatterns("https://one.example", "https://two.example")).thenReturn(endpointRegistration);
         when(endpointRegistration.addInterceptors(jwtHandshakeInterceptor)).thenReturn(endpointRegistration);
@@ -72,5 +77,8 @@ class WebSocketConfigTest {
         verify(endpointRegistration).setAllowedOriginPatterns("https://one.example", "https://two.example");
         verify(endpointRegistration).addInterceptors(jwtHandshakeInterceptor);
         verify(endpointRegistration).withSockJS();
+        // ← opcional pero bueno: verifica que heartbeats y scheduler sí se llamaron
+        verify(simpleBrokerRegistration).setHeartbeatValue(new long[]{10000, 10000});
+        verify(simpleBrokerRegistration).setTaskScheduler(any());
     }
 }
