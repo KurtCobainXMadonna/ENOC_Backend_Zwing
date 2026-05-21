@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eci.ZwingBackend.rack.application.port.out.RackCachePort;
 import org.eci.ZwingBackend.rack.application.port.out.RackRepositoryPort;
 import org.eci.ZwingBackend.rack.application.port.out.ChannelLockPort;
-import org.eci.ZwingBackend.rack.domain.model.ChannelRack;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

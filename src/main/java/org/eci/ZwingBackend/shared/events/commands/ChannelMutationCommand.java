@@ -2,7 +2,7 @@ package org.eci.ZwingBackend.shared.events.commands;
 
 import lombok.Getter;
 
-import java.util.UUID;
+
 
 @Getter
 public abstract class ChannelMutationCommand extends RackCommand {
