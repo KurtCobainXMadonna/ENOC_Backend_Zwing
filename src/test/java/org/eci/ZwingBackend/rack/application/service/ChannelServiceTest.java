@@ -65,9 +65,11 @@ class ChannelServiceTest {
     @Test
     void addChannelRejectsWhenPlaybackIsLocked() {
         UUID projectId = UUID.randomUUID();
+        UUID soundId = UUID.randomUUID();
+        UUID requesterId = UUID.randomUUID();
         when(lockPort.lockExists("playback_lock:" + projectId)).thenReturn(true);
 
-        assertThatThrownBy(() -> channelService.addChannel(projectId, "Kick", UUID.randomUUID(), UUID.randomUUID()))
+        assertThatThrownBy(() -> channelService.addChannel(projectId, "Kick", soundId, requesterId))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Cannot add channels during playback.");
     }

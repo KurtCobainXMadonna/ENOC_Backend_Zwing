@@ -149,10 +149,12 @@ class SoundServiceTest {
     @Test
     void deleteProjectSoundRejectsGlobalPreset() {
         UUID soundId = UUID.randomUUID();
+        UUID projectId = UUID.randomUUID();
+        UUID requesterId = UUID.randomUUID();
         SoundPreset preset = new SoundPreset(soundId, "Kick", SoundCategory.KICK, "url", "desc", null, null);
         when(soundRepository.findById(soundId)).thenReturn(Optional.of(preset));
 
-        assertThatThrownBy(() -> soundService.deleteProjectSound(soundId, UUID.randomUUID(), UUID.randomUUID()))
+        assertThatThrownBy(() -> soundService.deleteProjectSound(soundId, projectId, requesterId))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Global presets cannot be deleted.");
     }

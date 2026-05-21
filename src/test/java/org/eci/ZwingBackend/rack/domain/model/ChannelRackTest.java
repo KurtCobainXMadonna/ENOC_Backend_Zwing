@@ -26,8 +26,9 @@ class ChannelRackTest {
     @Test
     void getChannelThrowsWhenMissing() {
         ChannelRack rack = new ChannelRack(UUID.randomUUID(), UUID.randomUUID());
+        UUID missingChannelId = UUID.randomUUID();
 
-        assertThatThrownBy(() -> rack.getChannel(UUID.randomUUID()))
+        assertThatThrownBy(() -> rack.getChannel(missingChannelId))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessageContaining("Channel not found");
     }
