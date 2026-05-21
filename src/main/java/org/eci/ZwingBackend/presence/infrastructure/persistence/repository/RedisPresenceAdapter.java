@@ -71,8 +71,7 @@ public class RedisPresenceAdapter implements PresenceStorePort {
 
     @Override
     public long countInProject(UUID projectId) {
-        Long size = redis.opsForHash().size(presenceKey(projectId));
-        return size == null ? 0L : size;
+        return redis.opsForHash().size(presenceKey(projectId));
     }
 
     private static final String CLAIM_COLOR_LUA = """

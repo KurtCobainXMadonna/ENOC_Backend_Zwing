@@ -22,7 +22,7 @@ public class InviteService implements InviteCollaboratorCase {
     private final ManagingCollaboratorCase managingCollaboratorCase;
     private final InviteTokenGeneratorPort inviteTokenGeneratorPort;
 
-    private static final long INVITE_TTL_SECONDS = 15 * 60;
+    private static final long INVITE_TTL_SECONDS = 15L * 60;
 
     @Override
     public String inviteCollaborator(UUID projectId, UUID requesterId) {
