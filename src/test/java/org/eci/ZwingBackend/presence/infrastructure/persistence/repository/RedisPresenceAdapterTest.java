@@ -96,7 +96,7 @@ class RedisPresenceAdapterTest {
 
         when(hashOperations.get("presence:project:" + projectId, userId)).thenReturn("broken");
         when(hashOperations.entries("presence:project:" + projectId)).thenReturn(Map.of(userId, "broken"));
-        when(hashOperations.size("presence:project:" + projectId)).thenReturn(null);
+        when(hashOperations.size("presence:project:" + projectId)).thenReturn(0L);  // ← era null, ahora 0L
 
         assertThat(realAdapter.findPresence(projectId, userId)).isEmpty();
         assertThat(realAdapter.findAllInProject(projectId)).isEmpty();
