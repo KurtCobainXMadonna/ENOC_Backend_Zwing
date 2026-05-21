@@ -60,7 +60,18 @@ jobs:
           AZURE_STORAGE_CONNECTION_STRING: ""
           AZURE_BLOB_UPLOADS_CONTAINER: audio-uploads
         run: mvn clean verify -Pcoverage
-
+      
+      # ── DIAGNÓSTICO: verificar que el reporte existe y tiene contenido ──
+      - name: Verify JaCoCo report
+        run: |
+          echo "=== Buscando reportes JaCoCo ==="
+          find target -name "jacoco.xml" 2>/dev/null || echo "NO SE ENCONTRÓ jacoco.xml"
+          find target -name "jacoco.exec" 2>/dev/null || echo "NO SE ENCONTRÓ jacoco.exec"
+          echo "=== Contenido de target/site/jacoco/ ==="
+          ls -la target/site/jacoco/ 2>/dev/null || echo "El directorio no existe"
+          echo "=== Primeras líneas del XML ==="
+          head -5 target/site/jacoco/jacoco.xml 2>/dev/null || echo "No se puede leer el archivo"
+      
       - name: SonarCloud Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_BACKEND }}
@@ -75,6 +86,6 @@ jobs:
             -Dsonar.sources=src/main/java \
             -Dsonar.tests=src/test/java \
             -Dsonar.exclusions="**/ZwingBackendApplication.java,**/dto/**,**/*Entity.java,**/*Mapper.java,**/config/**"
-
+      
       - name: Build Docker image (verify Dockerfile works)
         run: docker build -t zwing-backend:ci .
