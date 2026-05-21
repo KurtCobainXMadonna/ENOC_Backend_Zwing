@@ -2,11 +2,13 @@ package org.eci.ZwingBackend;
 
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+
 class ZwingBackendApplicationTests {
 
 	@Test
 	void applicationClassIsPresent() {
-		assert ZwingBackendApplication.class != null;
+		assertDoesNotThrow(() -> Class.forName(ZwingBackendApplication.class.getName()));
 	}
 
 }
