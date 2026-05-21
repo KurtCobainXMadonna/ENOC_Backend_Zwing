@@ -3,6 +3,7 @@ package org.eci.ZwingBackend.project.infraestructure.persistence.repository;
 import lombok.AllArgsConstructor;
 import org.eci.ZwingBackend.auth.domain.model.User;
 import org.eci.ZwingBackend.auth.infraestructure.persistence.Postgre.UserAuthRepository;
+import org.eci.ZwingBackend.auth.infraestructure.persistence.entity.UserEntity;
 import org.eci.ZwingBackend.auth.infraestructure.persistence.repository.mapper.UserAuthMapper;
 import org.eci.ZwingBackend.project.application.port.out.UserLookupPort;
 import org.springframework.stereotype.Component;
