@@ -95,12 +95,13 @@ class ProjectServiceTest {
     @Test
     void deleteProjectRejectsNonOwner() {
         UUID projectId = UUID.randomUUID();
+        UUID nonOwnerId = UUID.randomUUID();
         Project project = new Project("Project");
         project.setProjectId(projectId);
         project.setProjectOwner(user(UUID.randomUUID(), "Owner", "owner@example.com"));
         when(projectRepository.getProjectById(projectId)).thenReturn(project);
 
-        assertThatThrownBy(() -> projectService.deleteProject(projectId, UUID.randomUUID()))
+        assertThatThrownBy(() -> projectService.deleteProject(projectId, nonOwnerId))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Unauthorized: Only the project owner can delete this project.");
     }
@@ -196,12 +197,13 @@ class ProjectServiceTest {
     @Test
     void getProjectByIdRejectsOutsider() {
         UUID projectId = UUID.randomUUID();
+        UUID outsiderId = UUID.randomUUID();
         Project project = new Project("Project");
         project.setProjectId(projectId);
         project.setProjectOwner(user(UUID.randomUUID(), "Owner", "owner@example.com"));
         when(projectRepository.getProjectById(projectId)).thenReturn(project);
 
-        assertThatThrownBy(() -> projectService.getProjectById(projectId, UUID.randomUUID()))
+        assertThatThrownBy(() -> projectService.getProjectById(projectId, outsiderId))
                 .isInstanceOf(RuntimeException.class)
                 .hasMessage("Unauthorized: You are not a member of this project.");
     }

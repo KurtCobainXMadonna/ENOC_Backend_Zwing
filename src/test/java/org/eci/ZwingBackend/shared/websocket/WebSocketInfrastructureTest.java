@@ -23,7 +23,6 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
@@ -39,6 +38,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -140,9 +140,10 @@ class WebSocketInfrastructureTest {
         boolean accepted = handshakeInterceptor.beforeHandshake(new ServletServerHttpRequest(servletRequest), new ServletServerHttpResponse(new MockHttpServletResponse()), mockWebSocketHandler(), attributes);
 
         assertThat(accepted).isTrue();
-        assertThat(attributes).containsEntry("userId", "123e4567-e89b-12d3-a456-426614174000");
-        assertThat(attributes).containsEntry("email", "user@example.com");
-        assertThat(attributes).containsKey("token");
+        assertThat(attributes)
+            .containsEntry("userId", "123e4567-e89b-12d3-a456-426614174000")
+            .containsEntry("email", "user@example.com")
+            .containsKey("token");
     }
 
     @Test
@@ -180,32 +181,11 @@ class WebSocketInfrastructureTest {
     }
 
     private WebSocketHandler mockWebSocketHandler() {
-        return new WebSocketHandler() {
-            @Override
-            public void afterConnectionEstablished(WebSocketSession session) { }
-
-            @Override
-            public void handleMessage(WebSocketSession session, org.springframework.web.socket.WebSocketMessage<?> message) { }
-
-            @Override
-            public void handleTransportError(WebSocketSession session, Throwable exception) { }
-
-            @Override
-            public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) { }
-
-            @Override
-            public boolean supportsPartialMessages() { return false; }
-        };
+        return mock(WebSocketHandler.class);
     }
 
     private MessageChannel mockMessageChannel() {
-        return new MessageChannel() {
-            @Override
-            public boolean send(Message<?> message) { return true; }
-
-            @Override
-            public boolean send(Message<?> message, long timeout) { return true; }
-        };
+        return mock(MessageChannel.class);
     }
 
     private static void setField(Object target, String fieldName, Object value) throws Exception {
