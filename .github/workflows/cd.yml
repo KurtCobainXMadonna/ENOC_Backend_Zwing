@@ -3,6 +3,7 @@ name: CD
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -26,13 +27,34 @@ jobs:
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/zwing-backend:${{ github.sha }}
           docker push ${{ secrets.ACR_LOGIN_SERVER }}/zwing-backend:latest
 
-      - name: Azure Login
-        uses: azure/login@v1
+      - name: Azure login
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy to Azure App Service
+      - name: Deploy to App Service — backend 1 (REST + WS)
         uses: azure/webapps-deploy@v3
         with:
-          app-name: ${{ secrets.AZURE_APP_NAME }}
+          app-name: ${{ secrets.AZURE_APP_NAME_1 }}
           images: ${{ secrets.ACR_LOGIN_SERVER }}/zwing-backend:${{ github.sha }}
+
+      - name: Deploy to App Service — backend 2 (REST only)
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_APP_NAME_2 }}
+          images: ${{ secrets.ACR_LOGIN_SERVER }}/zwing-backend:${{ github.sha }}
+
+      - name: Smoke test — wait for health on both apps
+        run: |
+          for app in ${{ secrets.AZURE_APP_NAME_1 }} ${{ secrets.AZURE_APP_NAME_2 }}; do
+            for i in {1..30}; do
+              status=$(curl -s -o /dev/null -w "%{http_code}" "https://$app.azurewebsites.net/actuator/health" || echo "000")
+              echo "[$app] attempt $i: $status"
+              if [ "$status" = "200" ]; then break; fi
+              sleep 10
+            done
+            if [ "$status" != "200" ]; then
+              echo "::error::$app failed health check"
+              exit 1
+            fi
+          done
