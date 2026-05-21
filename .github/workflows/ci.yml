@@ -63,7 +63,6 @@ jobs:
 
       - name: SonarCloud Analysis
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_BACKEND }}
         run: |
           mvn sonar:sonar -Pcoverage \
