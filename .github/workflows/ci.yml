@@ -87,7 +87,12 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_BACKEND }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mvn sonar:sonar \
+          echo "PR number: ${{ github.event.pull_request.number }}"
+          echo "Head ref: ${{ github.head_ref }}"
+          echo "Base ref: ${{ github.base_ref }}"
+          echo "Token empty? $( [ -z '${{ secrets.SONAR_TOKEN_BACKEND }}' ] && echo YES || echo NO )"
+          
+          mvn --batch-mode sonar:sonar \
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY_BACKEND }} \
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
             -Dsonar.host.url=https://sonarcloud.io \
