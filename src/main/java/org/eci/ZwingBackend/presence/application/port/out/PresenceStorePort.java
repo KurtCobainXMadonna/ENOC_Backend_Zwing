@@ -1,7 +1,7 @@
 package org.eci.ZwingBackend.presence.application.port.out;
 
 import org.eci.ZwingBackend.presence.domain.model.Presence;
-import org.springframework.stereotype.Component;
+
 
 import java.util.List;
 import java.util.Optional;
