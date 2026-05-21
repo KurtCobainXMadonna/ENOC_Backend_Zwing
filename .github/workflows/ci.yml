@@ -65,12 +65,6 @@ jobs:
           AZURE_BLOB_UPLOADS_CONTAINER: audio-uploads
         run: mvn clean verify -Pcoverage
 
-      - name: Verify JaCoCo report exists
-        run: |
-          echo "=== Buscando reporte JaCoCo ==="
-          find target -name "jacoco.xml" 2>/dev/null || echo "NO ENCONTRADO"
-          ls -la target/site/jacoco/ 2>/dev/null || echo "Directorio no existe"
-          
       - name: Sonar analysis (branch)
         if: github.event_name == 'push'
         env:
