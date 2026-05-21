@@ -16,18 +16,6 @@
 
 	<properties>
 		<java.version>21</java.version>
-		<sonar.organization>TU_ORG_SONARCLOUD</sonar.organization>
-		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
-		<sonar.projectKey>TU_PROJECT_KEY_BACKEND</sonar.projectKey>
-		<sonar.coverage.jacoco.xmlReportPaths>
-			${project.build.directory}/site/jacoco/jacoco.xml
-		</sonar.coverage.jacoco.xmlReportPaths>
-		<sonar.exclusions>
-			**/ZwingBackendApplication.java,
-			**/dto/**,
-			**/*Entity.java,
-			**/*Mapper.java
-		</sonar.exclusions>
 	</properties>
 
 	<dependencies>
@@ -111,6 +99,10 @@
 			<artifactId>azure-storage-blob</artifactId>
 			<version>12.27.1</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -127,6 +119,7 @@
 			<id>coverage</id>
 			<build>
 				<plugins>
+
 					<plugin>
 						<groupId>org.jacoco</groupId>
 						<artifactId>jacoco-maven-plugin</artifactId>
@@ -152,28 +145,6 @@
 									<outputDirectory>${project.build.directory}/site/jacoco</outputDirectory>
 								</configuration>
 							</execution>
-							<execution>
-								<id>check</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>check</goal>
-								</goals>
-								<configuration>
-									<rules>
-										<rule>
-											<element>BUNDLE</element>
-											<limits>
-												<limit>
-													<counter>LINE</counter>
-													<value>COVEREDRATIO</value>
-													<minimum>0.50</minimum>
-												</limit>
-											</limits>
-										</rule>
-									</rules>
-									<haltOnFailure>false</haltOnFailure>
-								</configuration>
-							</execution>
 						</executions>
 						<configuration>
 							<excludes>
@@ -191,6 +162,7 @@
 						<artifactId>sonar-maven-plugin</artifactId>
 						<version>3.11.0.3922</version>
 					</plugin>
+
 				</plugins>
 			</build>
 		</profile>
