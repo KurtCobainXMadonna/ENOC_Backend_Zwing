@@ -70,7 +70,7 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_BACKEND }}
         run: |
-          mvn sonar:sonar \
+          mvn --batch-mode sonar:sonar \
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY_BACKEND }} \
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
             -Dsonar.host.url=https://sonarcloud.io \
@@ -79,7 +79,8 @@ jobs:
             -Dsonar.java.binaries=target/classes \
             -Dsonar.sources=src/main/java \
             -Dsonar.tests=src/test/java \
-            -Dsonar.exclusions="**/ZwingBackendApplication.java,**/dto/**,**/*Entity.java,**/*Mapper.java,**/config/**"
+            -Dsonar.exclusions="**/ZwingBackendApplication.java" \
+            -Dsonar.coverage.exclusions="**/ZwingBackendApplication.java,**/dto/**,**/*Entity.java,**/*Mapper.java,**/config/**"
 
       - name: Sonar analysis (pull request)
         if: github.event_name == 'pull_request'
@@ -87,7 +88,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_BACKEND }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mvn sonar:sonar \
+          mvn --batch-mode sonar:sonar \
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY_BACKEND }} \
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
             -Dsonar.host.url=https://sonarcloud.io \
@@ -96,7 +97,8 @@ jobs:
             -Dsonar.java.binaries=target/classes \
             -Dsonar.sources=src/main/java \
             -Dsonar.tests=src/test/java \
-            -Dsonar.exclusions="**/ZwingBackendApplication.java,**/dto/**,**/*Entity.java,**/*Mapper.java,**/config/**" \
+            -Dsonar.exclusions="**/ZwingBackendApplication.java" \
+            -Dsonar.coverage.exclusions="**/ZwingBackendApplication.java,**/dto/**,**/*Entity.java,**/*Mapper.java,**/config/**" \
             -Dsonar.pullrequest.key=${{ github.event.pull_request.number }} \
             -Dsonar.pullrequest.branch=${{ github.head_ref }} \
             -Dsonar.pullrequest.base=${{ github.base_ref }}
