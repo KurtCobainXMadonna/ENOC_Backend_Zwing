@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.nio.charset.StandardCharsets;
@@ -70,5 +71,35 @@ class JwtAuthenticationFilterTest {
 
         assertThat(SecurityContextHolder.getContext().getAuthentication()).isNotNull();
         verify(filterChain).doFilter(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(response));
+    }
+
+    @Test
+    void rejectsInvalidToken() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/private");
+        request.setCookies(new Cookie("jwt_token", "invalid-token"));
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        FilterChain filterChain = mock(FilterChain.class);
+
+        filter.doFilter(request, response, filterChain);
+
+        assertThat(response.getStatus()).isEqualTo(401);
+        assertThat(response.getContentAsString()).contains("Invalid or expired token");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        assertThat(authentication).isNull();
+    }
+
+    @Test
+    void skipsActuatorAndWebsocketEndpoints() throws Exception {
+        MockHttpServletRequest actuatorRequest = new MockHttpServletRequest("GET", "/actuator/health");
+        MockHttpServletResponse actuatorResponse = new MockHttpServletResponse();
+        MockHttpServletRequest websocketRequest = new MockHttpServletRequest("GET", "/ws/socket");
+        MockHttpServletResponse websocketResponse = new MockHttpServletResponse();
+        FilterChain filterChain = mock(FilterChain.class);
+
+        filter.doFilter(actuatorRequest, actuatorResponse, filterChain);
+        filter.doFilter(websocketRequest, websocketResponse, filterChain);
+
+        verify(filterChain).doFilter(actuatorRequest, actuatorResponse);
+        verify(filterChain).doFilter(websocketRequest, websocketResponse);
     }
 }
